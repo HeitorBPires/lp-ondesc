@@ -7,18 +7,16 @@ declare global {
   var __ondescAntdReact19Patched__: boolean | undefined;
 }
 
-if (
-  typeof window !== "undefined" &&
-  !globalThis.__ondescAntdReact19Patched__
-) {
+if (typeof window !== "undefined" && !globalThis.__ondescAntdReact19Patched__) {
   const roots = new Map<HTMLElement, Root>();
 
   unstableSetRender((node, container) => {
-    let root = roots.get(container);
+    const htmlContainer = container as HTMLElement;
+    let root = roots.get(htmlContainer);
 
     if (!root) {
-      root = createRoot(container);
-      roots.set(container, root);
+      root = createRoot(htmlContainer);
+      roots.set(htmlContainer, root);
     }
 
     root.render(node);
@@ -26,7 +24,7 @@ if (
     return async () => {
       await Promise.resolve();
       root.unmount();
-      roots.delete(container);
+      roots.delete(htmlContainer);
     };
   });
 
