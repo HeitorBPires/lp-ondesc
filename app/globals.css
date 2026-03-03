@@ -457,6 +457,10 @@ h3 {
   min-height: 500px;
 }
 
+.hero-mobile-bullets {
+  display: none;
+}
+
 .section-block {
   position: relative;
   padding: 58px 0;
@@ -2533,6 +2537,78 @@ h3 {
 }
 
 @media (max-width: 1025px) {
+  .hero-section {
+    padding: 18px 0 34px;
+  }
+
+  .hero-grid {
+    gap: 1.6rem;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.05rem;
+  }
+
+  .hero-title {
+    order: 1;
+    font-size: clamp(1.72rem, 8.3vw, 2.25rem);
+    line-height: 1.08;
+  }
+
+  .hero-subtitle {
+    order: 2;
+    margin-bottom: 0;
+    font-size: 0.94rem;
+    line-height: 1.35;
+  }
+
+  .hero-copy {
+    order: 3;
+    padding-top: 0 !important;
+    display: grid;
+    gap: 0.82rem;
+  }
+
+  .hero-lead-text,
+  .hero-disclaimer {
+    display: none;
+  }
+
+  .hero-mobile-bullets {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding-left: 1.15rem;
+    list-style: disc;
+    color: var(--gray-700);
+    font-size: 0.96rem;
+    line-height: 1.38;
+  }
+
+  .hero-cta-stack {
+    order: 4;
+    margin-top: 0 !important;
+    width: 100%;
+    gap: 0.72rem;
+    align-items: stretch;
+  }
+
+  .hero-cta-stack .ant-btn {
+    width: 100%;
+  }
+
+  .hero-visual {
+    order: 5;
+  }
+
+  .hero-image {
+    min-height: clamp(180px, 52vw, 250px);
+    max-width: 86%;
+    margin: 0 auto;
+  }
+
   .floating-whatsapp {
     width: 58px;
     height: 58px;
