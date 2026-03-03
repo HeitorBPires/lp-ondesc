@@ -54,6 +54,7 @@ const howSteps = [
 ];
 
 const DEFAULT_HEADER_OFFSET = 96;
+const MOBILE_BREAKPOINT_PX = 1025;
 
 // ✅ Recomendação: cooldown bem baixo + controle por acumulador de wheel
 const SNAP_COOLDOWN_MS = 120;
@@ -103,6 +104,7 @@ function nearestStepIndex(anchors: number[], y: number) {
 export default function ComoFuncionaSection() {
   const [activeStep, setActiveStep] = useState(0);
   const [headerOffset, setHeaderOffset] = useState(DEFAULT_HEADER_OFFSET);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const stickyRef = useRef<HTMLDivElement | null>(null);
@@ -122,6 +124,33 @@ export default function ComoFuncionaSection() {
   const scrollPages = useMemo(() => stepsCount, [stepsCount]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia(
+      `(max-width: ${MOBILE_BREAKPOINT_PX}px)`,
+    );
+
+    const syncViewport = () => {
+      setIsMobileViewport(mediaQuery.matches);
+    };
+
+    syncViewport();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncViewport);
+      return () => mediaQuery.removeEventListener("change", syncViewport);
+    }
+
+    const legacyMediaQuery = mediaQuery as MediaQueryList & {
+      addListener: (listener: (event: MediaQueryListEvent) => void) => void;
+      removeListener: (listener: (event: MediaQueryListEvent) => void) => void;
+    };
+
+    legacyMediaQuery.addListener(syncViewport);
+    return () => legacyMediaQuery.removeListener(syncViewport);
+  }, []);
+
+  useEffect(() => {
     howSteps.forEach((s) => {
       const img = new Image();
       img.src = s.image;
@@ -129,6 +158,8 @@ export default function ComoFuncionaSection() {
   }, []);
 
   const getSnapMetrics = useCallback((): SnapMetrics | null => {
+    if (isMobileViewport) return null;
+
     const wrapEl = wrapRef.current;
     if (!wrapEl || stepsCount <= 0) return null;
 
@@ -152,24 +183,28 @@ export default function ComoFuncionaSection() {
     const stickyEndY = anchors[anchors.length - 1];
 
     return { anchors, stickyStartY, stickyEndY };
-  }, [headerOffset, stepsCount]);
+  }, [headerOffset, isMobileViewport, stepsCount]);
 
   const isStickyActive = useCallback(() => {
+    if (isMobileViewport) return false;
+
     const metrics = getSnapMetrics();
     if (!metrics) return false;
 
     const y = window.scrollY;
     return y >= metrics.stickyStartY - 1 && y <= metrics.stickyEndY - 8;
-  }, [getSnapMetrics]);
+  }, [getSnapMetrics, isMobileViewport]);
 
   const syncActiveStepFromScroll = useCallback(() => {
+    if (isMobileViewport) return;
+
     const metrics = getSnapMetrics();
     if (!metrics) return;
 
     const index = nearestStepIndex(metrics.anchors, window.scrollY);
     activeStepRef.current = index;
     setActiveStep((prev) => (prev === index ? prev : index));
-  }, [getSnapMetrics]);
+  }, [getSnapMetrics, isMobileViewport]);
 
   const finishAnimationIfNeeded = useCallback(() => {
     if (!isAnimatingRef.current) return;
@@ -192,6 +227,8 @@ export default function ComoFuncionaSection() {
   // - clique: "smooth" (bonito)
   const snapToStep = useCallback(
     (nextIndex: number, behavior: ScrollBehavior = "auto") => {
+      if (isMobileViewport) return;
+
       const metrics = getSnapMetrics();
       if (!metrics) return;
 
@@ -225,12 +262,14 @@ export default function ComoFuncionaSection() {
         }, SNAP_MAX_ANIM_MS + 50);
       }
     },
-    [getSnapMetrics, stepsCount],
+    [getSnapMetrics, isMobileViewport, stepsCount],
   );
 
   // ✅ gesto de 1-step (sem “travão” longo)
   const handleStepGesture = useCallback(
     (direction: 1 | -1) => {
+      if (isMobileViewport) return false;
+
       const metrics = getSnapMetrics();
       if (!metrics) return false;
 
@@ -253,7 +292,7 @@ export default function ComoFuncionaSection() {
       snapToStep(current + direction, "auto");
       return true;
     },
-    [getSnapMetrics, snapToStep, stepsCount],
+    [getSnapMetrics, isMobileViewport, snapToStep, stepsCount],
   );
   useEffect(() => {
     activeStepRef.current = activeStep;
@@ -289,6 +328,8 @@ export default function ComoFuncionaSection() {
   }, []);
 
   useEffect(() => {
+    if (isMobileViewport) return;
+
     const onWindowScroll = () => {
       if (rafRef.current) return;
       rafRef.current = window.requestAnimationFrame(() => {
@@ -307,9 +348,11 @@ export default function ComoFuncionaSection() {
       window.removeEventListener("scroll", onWindowScroll);
       window.removeEventListener("resize", onWindowScroll);
     };
-  }, [finishAnimationIfNeeded, syncActiveStepFromScroll]);
+  }, [finishAnimationIfNeeded, isMobileViewport, syncActiveStepFromScroll]);
 
   useEffect(() => {
+    if (isMobileViewport) return;
+
     const onWheel = (event: WheelEvent) => {
       if (!isStickyActive()) return;
 
@@ -380,9 +423,16 @@ export default function ComoFuncionaSection() {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [handleStepGesture, isStickyActive]);
+  }, [
+    getSnapMetrics,
+    handleStepGesture,
+    isMobileViewport,
+    isStickyActive,
+    stepsCount,
+  ]);
 
   useEffect(() => {
+    if (isMobileViewport) return;
     if (process.env.NODE_ENV !== "development") return;
 
     const stickyEl = stickyRef.current;
@@ -473,9 +523,56 @@ export default function ComoFuncionaSection() {
     return () => {
       window.removeEventListener("resize", checkStickyHealth);
     };
-  }, []);
+  }, [isMobileViewport]);
 
   const step = howSteps[activeStep];
+  const headingContent = (
+    <div className="como-heading fade-in-up flex flex-col items-center mb-2">
+      <p className="program-referral-kicker">Como funciona</p>
+      <h2>Em poucos passos, você começa a pagar menos na sua conta de energia.</h2>
+    </div>
+  );
+
+  if (isMobileViewport) {
+    return (
+      <div
+        className="como-funciona-root"
+        style={{ "--header-offset": `${headerOffset}px` } as CSSProperties}
+      >
+        {headingContent}
+
+        <div className="como-mobile-list">
+          {howSteps.map((mobileStep, index) => (
+            <article className="como-mobile-step" key={mobileStep.title}>
+              <div className="como-mobile-step-heading">
+                <span className="como-mobile-step-number">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="como-mobile-step-copy">
+                  <h3>{mobileStep.title}</h3>
+                  <p className="section-text">{mobileStep.text}</p>
+                </div>
+              </div>
+
+              <p className="mini-disclaimer-p como-mobile-step-description">
+                {mobileStep.description}
+              </p>
+
+              <ImagePlaceholder
+                src={mobileStep.image}
+                alt={mobileStep.alt}
+                fallbackLabel={mobileStep.image}
+                className="como-mobile-step-image"
+                priority={index === 0}
+                loading={index <= 1 ? "eager" : "lazy"}
+                sizes="(max-width: 1025px) 100vw, 42vw"
+              />
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -488,10 +585,7 @@ export default function ComoFuncionaSection() {
         style={{ height: `calc(${scrollPages} * 100vh)` }}
       >
         <div ref={stickyRef} className="como-scrolly-sticky">
-          <div className="como-heading fade-in-up flex flex-col items-center mb-2">
-            <p className="program-referral-kicker">Como funciona</p>
-            <h2>Role para avançar as etapas do processo.</h2>
-          </div>
+          {headingContent}
 
           <div className="como-scrolly-card">
             <div className="como-scrolly-grid">

@@ -2,6 +2,7 @@ import { Card } from "antd";
 import Image from "next/image";
 import type { IconType } from "react-icons";
 import { FaChartLine, FaLeaf, FaTree } from "react-icons/fa";
+import { LuLeaf } from "react-icons/lu";
 import { SiGumtree } from "react-icons/si";
 import { TbPigMoney } from "react-icons/tb";
 
@@ -38,7 +39,7 @@ type ImpactHighlight = {
 
 const impactHighlights: ImpactHighlight[] = [
   {
-    Icon: FaLeaf,
+    Icon: LuLeaf,
     value: "+ 15,2 t/ano de CO₂ evitadas",
     title: "Redução de emissões",
     text: "A utilização de energia renovável reduz a dependência de fontes convencionais e evita a emissão de toneladas de CO₂ na atmosfera.",
@@ -117,18 +118,6 @@ export default function EconomiaSection() {
 
               return (
                 <article key={item.title} className="economy-impact-item">
-                  <p className="economy-impact-value">
-                    <span className="economy-impact-value-number">
-                      {amount}
-                    </span>
-                    {context ? (
-                      <span className="economy-impact-value-context">
-                        {context}
-                      </span>
-                    ) : null}
-                  </p>
-                  <h4 className="economy-impact-item-title">{item.title}</h4>
-                  <p className="economy-impact-item-text">{item.text}</p>
                   <span className="economy-impact-icon-wrap" aria-hidden>
                     {item.Icon ? (
                       <item.Icon className="economy-impact-lib-icon" />
@@ -143,6 +132,18 @@ export default function EconomiaSection() {
                       />
                     ) : null}
                   </span>
+                  <p className="economy-impact-value">
+                    <span className="economy-impact-value-number">
+                      {amount}
+                    </span>
+                    {context ? (
+                      <span className="economy-impact-value-context">
+                        {context}
+                      </span>
+                    ) : null}
+                  </p>
+                  <h4 className="economy-impact-item-title">{item.title}</h4>
+                  <p className="economy-impact-item-text">{item.text}</p>
                 </article>
               );
             })}
