@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "Simule seu desconto (20% a 90%) na conta de energia da Copel. Para PF e PJ. Atendimento via WhatsApp.",
     type: "website",
     locale: "pt_BR",
-    images: [{ url: "/logoon.svg", width: 1200, height: 630, alt: "ONDESC" }],
+    images: [{ url: "/image_0.png", width: 1200, height: 630, alt: "ONDESC" }],
   },
 };
 
